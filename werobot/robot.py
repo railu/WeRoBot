@@ -7,6 +7,8 @@ import inspect
 import hashlib
 import logging
 
+from WXBizMsgCrypt import WXBizMsgCrypt
+
 from bottle import Bottle, request, response, abort, template
 
 from werobot.config import Config, ConfigAttribute
@@ -32,7 +34,7 @@ class BaseRoBot(object):
     session_storage = ConfigAttribute("SESSION_STORAGE")
 
     def __init__(self, token=None, logger=None, enable_session=True,
-                 session_storage=None，
+                 session_storage=None,
                  app_id=None, app_secret=None, encoding_aes_key=None, corp_id=None):
         self.config = Config(_DEFAULT_CONFIG)
         self._handlers = dict((k, []) for k in self.message_types)
@@ -260,7 +262,6 @@ class WeRoBotBiz(BaseRoBot):
 
         @app.get('<t:path>')
         def echo(t):
-            from WXBizMsgCrypt import WXBizMsgCrypt
             wxcpt=WXBizMsgCrypt(self.config["TOKEN"], self.config["ENCODING_AES_KEY"], self.config["CORP_ID"])
             ret,sEchoStr=wxcpt.VerifyURL(request.query.msg_signature, request.query.timestamp, request.query.nonce, request.query.echostr)
             if(ret!=0):
