@@ -32,7 +32,8 @@ class BaseRoBot(object):
     session_storage = ConfigAttribute("SESSION_STORAGE")
 
     def __init__(self, token=None, logger=None, enable_session=True,
-                 session_storage=None):
+                 session_storage=None，
+                 app_id=None, app_secret=None, encoding_aes_key=None, corp_id=None):
         self.config = Config(_DEFAULT_CONFIG)
         self._handlers = dict((k, []) for k in self.message_types)
         self._handlers['all'] = []
@@ -49,7 +50,10 @@ class BaseRoBot(object):
         self.config.update(
             TOKEN=token,
             SESSION_STORAGE=session_storage,
-
+            APP_ID=app_id,
+            APP_SECRET=app_secret,
+            ENCODING_AES_KEY=encoding_aes_key,
+            CORP_ID=corp_id
         )
 
     def handler(self, f):
@@ -222,6 +226,87 @@ class BaseRoBot(object):
         sign = to_binary(''.join(sign))
         sign = hashlib.sha1(sign).hexdigest()
         return sign == signature
+
+class WeRoBotBiz(BaseRoBot):
+
+    ERROR_PAGE_TEMPLATE = """
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <meta charset="utf8" />
+            <title>Error: {{e.status}}</title>
+            <style type="text/css">
+              html {background-color: #eee; font-family: sans;}
+              body {background-color: #fff; border: 1px solid #ddd;
+                    padding: 15px; margin: 15px;}
+              pre {background-color: #eee; border: 1px solid #ddd; padding: 5px;}
+            </style>
+        </head>
+        <body>
+            <h1>Error: {{e.status}}</h1>
+            <p>微信机器人不可以通过 GET 方式直接进行访问。</p>
+            <p>想要使用本机器人，请在微信后台中将 URL 设置为 <pre>{{request.url}}</pre> 并将 Token 值设置正确。</p>
+
+            <p>如果你仍有疑问，请<a href="http://werobot.readthedocs.org/en/%s/">阅读文档</a>
+        </body>
+    </html>
+    """ % werobot.__version__
+
+    @property
+    def wsgi(self):
+        if not self._handlers:
+            raise
+        app = Bottle()
+
+        @app.get('<t:path>')
+        def echo(t):
+            from WXBizMsgCrypt import WXBizMsgCrypt
+            wxcpt=WXBizMsgCrypt(self.config["TOKEN"], self.config["ENCODING_AES_KEY"], self.config["CORP_ID"])
+            ret,sEchoStr=wxcpt.VerifyURL(request.query.msg_signature, request.query.timestamp, request.query.nonce, request.query.echostr)
+            if(ret!=0):
+                return abort(403)
+            return sEchoStr
+
+        @app.post('<t:path>')
+        def handle(t):
+            wxcpt=WXBizMsgCrypt(self.config["TOKEN"], self.config["ENCODING_AES_KEY"], self.config["CORP_ID"])
+            ret,sMsg=wxcpt.DecryptMsg( request.body.read(), request.query.msg_signature, request.query.timestamp, request.query.nonce)
+            if( ret!=0 ):
+                return abort(403)
+
+            message = parse_user_msg(sMsg)
+            logging.info("Receive message %s" % message)
+            reply = self.get_reply(message)
+            if not reply:
+                self.logger.warning("No handler responded message %s"
+                                    % message)
+                return ''
+            response.content_type = 'application/xml'
+            ret,sEncryptMsg=wxcpt.EncryptMsg(create_reply(reply, message=message), request.query.nonce)
+            if( ret!=0 ):
+                return abort(403)
+            return sEncryptMsg
+
+        @app.error(403)
+        def error403(error):
+            return template(self.ERROR_PAGE_TEMPLATE,
+                            e=error, request=request)
+
+        return app
+
+    def run(self, server=None, host=None,
+            port=None, enable_pretty_logging=True):
+        if enable_pretty_logging:
+            from werobot.logger import enable_pretty_logging
+            enable_pretty_logging(self.logger)
+        if server is None:
+            server = self.config["SERVER"]
+        if host is None:
+            host = self.config["HOST"]
+        if port is None:
+            port = self.config["PORT"]
+        self.wsgi.run(server=server, host=host, port=port)
+
 
 
 class WeRoBot(BaseRoBot):
