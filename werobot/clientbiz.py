@@ -77,7 +77,7 @@ class Client(object):
             url="https://qyapi.weixin.qq.com/cgi-bin/gettoken",
             params={
                 "corpid": self.corpid,
-                "corpsecret": self.corpsecret
+                "corpsecret": self.appsecret
             }
         )
 
@@ -148,20 +148,32 @@ class Client(object):
     def get_menu(self):
         """
         查询自定义菜单。
-        详情请参考 http://mp.weixin.qq.com/wiki/index.php?title=自定义菜单查询接口
+        详情请参考http://qydev.weixin.qq.com/wiki/index.php?title=自定义菜单查询接口
 
         :return: 返回的 JSON 数据包
         """
-        return self.get("https://qyapi.weixin.qq.com/cgi-bin/menu/get")
+        return self.get(
+            "https://qyapi.weixin.qq.com/cgi-bin/menu/get",
+            params={
+                "access_token": self.token,
+                "agentid": self.agentid,
+            }
+        )
 
     def delete_menu(self):
         """
         删除自定义菜单。
-        详情请参考 http://mp.weixin.qq.com/wiki/index.php?title=自定义菜单删除接口
+        详情请参考http://qydev.weixin.qq.com/wiki/index.php?title=自定义菜单删除接口
 
         :return: 返回的 JSON 数据包
         """
-        return self.get("https://qyapi.weixin.qq.com/cgi-bin/menu/delete")
+        return self.get(
+            "https://qyapi.weixin.qq.com/cgi-bin/menu/delete",
+            params={
+                "access_token": self.token,
+                "agentid": self.agentid,
+            }
+        )
 
     def upload_media(self, media_type, media_file):
         """
@@ -309,7 +321,7 @@ class Client(object):
     def send_text_message(self, user_id="", party_id="", tag_id="", content=None):
         """
         发送文本消息
-        详情请参考 http://mp.weixin.qq.com/wiki/index.php?title=发送客服消息
+        详情请参考 http://qydev.weixin.qq.com/wiki/index.php?title=发送消息
 
         :param user_id: 用户 ID 。 就是你收到的 `Message` 的 source
         :param content: 消息正文
