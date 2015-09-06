@@ -214,6 +214,56 @@ class Client(object):
             }
         )
 
+
+    def get_material_count(self):
+        """
+        获取应用素材总数以及每种类型素材的数目。
+        详情请参考http://qydev.weixin.qq.com/wiki/index.php?title=管理素材文件
+
+        :param agentid: 企业应用的id，整型。可在应用的设置页面查看。
+
+        :return: requests 的 Response 实例
+            {
+               "errcode": 0,
+               "errmsg": "ok",
+               "total_count": 37,
+               "image_count": 12,
+               "voice_count": 10,
+               "video_count": 3,
+               "file_count": 3,
+               "mpnews_count": 6
+            }
+        """
+        return requests.get(
+            "https://qyapi.weixin.qq.com/cgi-bin/material/get_count",
+            params={
+                "access_token": self.token,
+                "agentid": self.agentid,
+            }
+        )
+
+    def batchget_material(self, media_type, offset = 0, count = 10):
+        """
+        获取应用素材素材列表。
+        详情请参考http://qydev.weixin.qq.com/wiki/index.php?title=管理素材文件
+
+        :param media_type：素材类型，可以为图文(mpnews)、图片（image）、音频（voice）、视频（video）、文件（file）
+        :param agentid：企业应用的id，整型。
+                offset：从该类型素材的该偏移位置开始返回，0表示从第一个素材返回
+                count：返回素材的数量，取值在1到50之间。
+        :return: 返回的 JSON 数据包
+        """
+        return self.post(
+            url="https://qyapi.weixin.qq.com/cgi-bin/material/batchget",
+            data={
+                "type": media_type,
+                "agentid": self.agentid,
+                "offset": offset,
+                "count": count
+            }
+        )
+
+
     def create_group(self, name):
         """
         创建分组
@@ -385,6 +435,29 @@ class Client(object):
             }
         )
 
+    def send_file_message(self, user_id="", party_id="", tag_id="", media_id=None):
+        """
+        发送语音消息
+        详情请参考 http://mp.weixin.qq.com/wiki/index.php?title=发送客服消息
+
+        :param user_id: 用户 ID 。 就是你收到的 `Message` 的 source
+        :param media_id: 发送的语音的媒体ID。 可以通过 :func:`upload_media` 上传。
+        :return: 返回的 JSON 数据包
+        """
+        return self.post(
+            url="https://qyapi.weixin.qq.com/cgi-bin/message/send",
+            data={
+                "touser": user_id,
+                "toparty": party_id,
+                "totag": tag_id,
+                "msgtype": "file",
+                "agentid": self.agentid,
+                "file": {
+                    "media_id": media_id
+                }
+            }
+        )
+
     def send_video_message(self, user_id="", party_id="", tag_id="", media_id=None,
                            title=None, description=None):
         """
@@ -417,40 +490,7 @@ class Client(object):
             }
         )
 
-    def send_music_message(self, user_id, url, hq_url, thumb_media_id,
-                           title=None, description=None):
-        """
-        发送音乐消息
-        详情请参考 http://mp.weixin.qq.com/wiki/index.php?title=发送客服消息
-
-        :param user_id: 用户 ID 。 就是你收到的 `Message` 的 source
-        :param url: 音乐链接
-        :param hq_url: 高品质音乐链接，wifi环境优先使用该链接播放音乐
-        :param thumb_media_id: 缩略图的媒体ID。 可以通过 :func:`upload_media` 上传。
-        :param title: 音乐标题
-        :param description: 音乐描述
-        :return: 返回的 JSON 数据包
-        """
-        music_data = {
-            "musicurl": url,
-            "hqmusicurl": hq_url,
-            "thumb_media_id": thumb_media_id
-        }
-        if title:
-            music_data["title"] = title
-        if description:
-            music_data["description"] = description
-
-        return self.post(
-            url="https://api.weixin.qq.com/cgi-bin/message/custom/send",
-            data={
-                "touser": user_id,
-                "msgtype": "music",
-                "music": music_data
-            }
-        )
-
-    def send_article_message(self, user_id, articles):
+    def send_news_message(self, user_id, party_id, tag_id, articles):
         """
         发送图文消息
         详情请参考 http://mp.weixin.qq.com/wiki/index.php?title=发送客服消息
@@ -468,9 +508,11 @@ class Client(object):
                 "picurl": article.img
             })
         return self.post(
-            url="https://api.weixin.qq.com/cgi-bin/message/custom/send",
+            url="https://qyapi.weixin.qq.com/cgi-bin/message/send",
             data={
                 "touser": user_id,
+                "toparty": party_id,
+                "totag": tag_id,
                 "msgtype": "news",
                 "news": {
                     "articles": articles_data
