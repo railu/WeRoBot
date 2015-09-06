@@ -28,7 +28,7 @@ _DEFAULT_CONFIG = dict(
 
 class BaseRoBot(object):
     message_types = ['subscribe', 'unsubscribe', 'click',  'view',  # event
-                     'text', 'image', 'link', 'location', 'voice']
+                     'text', 'image', 'link', 'location', 'location_select', 'voice']
 
     token = ConfigAttribute("TOKEN")
     session_storage = ConfigAttribute("SESSION_STORAGE")
@@ -84,6 +84,13 @@ class BaseRoBot(object):
         Decorator to add a handler function for ``location`` messages
         """
         self.add_handler(f, type='location')
+        return f
+
+    def locationselect(self, f):
+        """
+        Decorator to add a handler function for ``location`` messages
+        """
+        self.add_handler(f, type='location_select')
         return f
 
     def link(self, f):
