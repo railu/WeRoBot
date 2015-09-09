@@ -86,7 +86,7 @@ class BaseRoBot(object):
         self.add_handler(f, type='location')
         return f
 
-    def locationselect(self, f):
+    def location_select(self, f):
         """
         Decorator to add a handler function for ``location`` messages
         """

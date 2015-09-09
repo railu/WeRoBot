@@ -12,6 +12,15 @@ class Article(object):
         self.img = img
         self.url = url
 
+class mpArticle(object):
+    def __init__(self, title="a", content="a", description="a", author="shgt", url="http://www.shwlzy.com/", thumb_media_id="http://www.shwlzy.com/static/themes/default/images/btn_bg_rbtn1105a.png", show_cover_pic="0"):
+        self.title = title
+        self.id = thumb_media_id
+        self.author = author
+        self.url = url
+        self.content = content
+        self.description = description
+        self.show_cover_pic = show_cover_pic
 
 class WeChatReply(object):
 

@@ -490,7 +490,7 @@ class Client(object):
             }
         )
 
-    def send_news_message(self, user_id, party_id, tag_id, articles):
+    def send_news_message(self, user_id="", party_id="", tag_id="", articles=None):
         """
         发送图文消息
         详情请参考 http://mp.weixin.qq.com/wiki/index.php?title=发送客服消息
@@ -514,7 +514,57 @@ class Client(object):
                 "toparty": party_id,
                 "totag": tag_id,
                 "msgtype": "news",
+                "agentid": self.agentid,
                 "news": {
+                    "articles": articles_data
+                }
+            }
+        )
+
+    def send_mpnews_message(self, user_id="", party_id="", tag_id="", articles=None, media_id=None):
+        """
+        发送图文消息
+        详情请参考 http://mp.weixin.qq.com/wiki/index.php?title=发送客服消息
+
+        :param user_id: 用户 ID 。 就是你收到的 `Message` 的 source
+        :param articles: 一个包含至多10个 :class:`Article` 实例的数组
+        :return: 返回的 JSON 数据包
+        """
+        if media_id:
+            return self.post(
+                url="https://qyapi.weixin.qq.com/cgi-bin/message/send",
+                data={
+                    "touser": user_id,
+                    "toparty": party_id,
+                    "totag": tag_id,
+                    "msgtype": "mpnews",
+                    "agentid": self.agentid,
+                    "mpnews": {
+                        "media_id": media_id
+                    }
+                }
+            )
+
+        articles_data = []
+        for article in articles:
+            articles_data.append({
+                "title": article.title,
+                "thumb_media_id": article.id,
+                "author":article.author,
+                "content_source_url": article.url,
+                "content": article.content,
+                "digest": article.description,
+                "show_cover_pic": article.show_cover_pic
+            })
+        return self.post(
+            url="https://qyapi.weixin.qq.com/cgi-bin/message/send",
+            data={
+                "touser": user_id,
+                "toparty": party_id,
+                "totag": tag_id,
+                "msgtype": "mpnews",
+                "agentid": self.agentid,
+                "mpnews": {
                     "articles": articles_data
                 }
             }
