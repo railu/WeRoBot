@@ -18,20 +18,33 @@ class WeChatMessage(object):
         self.time = int(message.get('CreateTime', 0))
         self.__dict__.update(message)
 
-
 @handle_for_type("text")
 class TextMessage(WeChatMessage):
     def __init__(self, message):
         self.content = message.pop("Content")
         super(TextMessage, self).__init__(message)
 
-
 @handle_for_type("image")
 class ImageMessage(WeChatMessage):
     def __init__(self, message):
         self.img = message.pop("PicUrl")
+        self.mediaid = message.pop("MediaId")
         super(ImageMessage, self).__init__(message)
 
+@handle_for_type("voice")
+class VoiceMessage(WeChatMessage):
+    def __init__(self, message):
+        self.media_id = message.pop('MediaId')
+        self.format = message.pop('Format')
+        super(VoiceMessage, self).__init__(message)
+
+@handle_for_type("video")
+@handle_for_type("shortvideo")
+class VideoMessage(WeChatMessage):
+    def __init__(self, message):
+        self.media_id = message.pop('MediaId')
+        self.thumb_media_id = message.pop('ThumbMediaId')
+        super(VideoMessage, self).__init__(message)
 
 @handle_for_type("location")
 class LocationMessage(WeChatMessage):
@@ -42,7 +55,6 @@ class LocationMessage(WeChatMessage):
         self.scale = int(message.pop('Scale'))
         self.label = message.pop('Label')
         super(LocationMessage, self).__init__(message)
-
 
 @handle_for_type("link")
 class LinkMessage(WeChatMessage):
@@ -57,33 +69,14 @@ class LinkMessage(WeChatMessage):
 class EventMessage(WeChatMessage):
     def __init__(self, message):
         message.pop("type")
-        self.type = message.pop("Event").lower()
-        if self.type == "click":
+        self.type = message.pop("Event")
+        if self.type == "CLICK":
             self.key = message.pop('EventKey')
-        elif self.type == "location":
+        elif self.type == "LOCATION":
             self.latitude = float(message.pop("Latitude"))
             self.longitude = float(message.pop("Longitude"))
             self.precision = float(message.pop("Precision"))
         super(EventMessage, self).__init__(message)
-
-
-@handle_for_type("voice")
-class VoiceMessage(WeChatMessage):
-    def __init__(self, message):
-        self.media_id = message.pop('MediaId')
-        self.format = message.pop('Format')
-        self.recognition = message.pop('Recognition')
-        super(VoiceMessage, self).__init__(message)
-
-
-@handle_for_type("video")
-@handle_for_type("shortvideo")
-class VideoMessage(WeChatMessage):
-    def __init__(self, message):
-        self.media_id = message.pop('MediaId')
-        self.thumb_media_id = message.pop('ThumbMediaId')
-        super(VideoMessage, self).__init__(message)
-
 
 class UnknownMessage(WeChatMessage):
     def __init__(self, message):

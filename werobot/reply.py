@@ -13,7 +13,7 @@ class Article(object):
         self.url = url
 
 class mpArticle(object):
-    def __init__(self, title="a", content="a", description="a", author="shgt", url="http://www.shwlzy.com/", thumb_media_id="http://www.shwlzy.com/static/themes/default/images/btn_bg_rbtn1105a.png", show_cover_pic="0"):
+    def __init__(self, title="a", content="a", description="", author="", url="http://www.shwlzy.com/", thumb_media_id=u'2iIgl91zWlbZuQx0guQeH65bT2ZYs7-6mrQXsHHqTCrR9RI4V-yywMvwpoF4RzApijbXBLKO9Sy_be83J9wintg', show_cover_pic="0"):
         self.title = title
         self.id = thumb_media_id
         self.author = author

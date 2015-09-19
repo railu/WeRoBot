@@ -92,6 +92,67 @@ class Client(object):
         self.token_expires_at = int(time.time()) + json["expires_in"]
         return self._token
 
+    def tag_creat(self, tagid, tagname):
+        return self.post(
+            url="https://qyapi.weixin.qq.com/cgi-bin/tag/create",
+            data={
+                "tagid": tagid,
+                "tagname":tagname,
+            }
+        )
+
+    def tag_update(self, tagid, tagname):
+        return self.post(
+            url="https://qyapi.weixin.qq.com/cgi-bin/tag/update",
+            data={
+                "tagid": tagid,
+                "tagname":tagname,
+            }
+        )
+
+    def tag_delete(self, tagid):
+        return self.get(
+            "https://qyapi.weixin.qq.com/cgi-bin/tag/delete",
+            params={
+                "access_token": self.token,
+                "tagid": tagid,
+            }
+        )
+
+    def tag_get_members(self, tagid):
+        return self.get(
+            "https://qyapi.weixin.qq.com/cgi-bin/tag/get",
+            params={
+                "access_token": self.token,
+                "tagid": tagid,
+            }
+        )
+
+    def tag_add_members(self, tagid, userlist=[], partylist=[]):
+        return self.post(
+            url="https://qyapi.weixin.qq.com/cgi-bin/tag/addtagusers",
+            data={
+                "tagid": tagid,
+                "userlist":userlist,
+                "partylist":partylist,
+            }
+        )
+
+    def tag_delete_members(self, tagid, userlist=[], partylist=[]):
+        return self.post(
+            url="https://qyapi.weixin.qq.com/cgi-bin/tag/deltagusers",
+            data={
+                "tagid": tagid,
+                "userlist":userlist,
+                "partylist":partylist,
+            }
+        )
+
+    def tag_get_list(self):
+        return self.get(
+            "https://qyapi.weixin.qq.com/cgi-bin/tag/list"
+        )
+
     def create_menu(self, menu_data):
         """
         创建自定义菜单 ::
@@ -177,8 +238,8 @@ class Client(object):
 
     def upload_media(self, media_type, media_file):
         """
-        上传多媒体文件。
-        详情请参考 http://mp.weixin.qq.com/wiki/index.php?title=上传下载多媒体文件
+        上传永久素材 。
+        详情请参考http://qydev.weixin.qq.com/wiki/index.php?title=管理素材文件
 
         :param media_type: 媒体文件类型，分别有图片（image）、语音（voice）、视频（video）和缩略图（thumb）
         :param media_file:要上传的文件，一个 File-object
@@ -186,15 +247,38 @@ class Client(object):
         :return: 返回的 JSON 数据包
         """
         return self.post(
-            url="http://file.api.weixin.qq.com/cgi-bin/media/upload",
+            url="https://qyapi.weixin.qq.com/cgi-bin/material/add_material",
+            params={
+                "access_token": self.token,
+                "agentid": self.agentid,
+                "type": media_type
+            },
+            files={
+                "media": open(media_file,"rb")
+            }
+        )
+
+    def upload_media_temp(self, media_type, media_file):
+        """
+        上传临时素材文件。
+        详情请参考http://qydev.weixin.qq.com/wiki/index.php?title=管理素材文件
+
+        :param media_type: 媒体文件类型，分别有图片（image）、语音（voice）、视频（video）和缩略图（thumb）
+        :param media_file:要上传的文件，一个 File-object
+
+        :return: 返回的 JSON 数据包
+        """
+        return self.post(
+            url="https://qyapi.weixin.qq.com/cgi-bin/media/upload",
             params={
                 "access_token": self.token,
                 "type": media_type
             },
             files={
-                "media": media_file
+                "media": open(media_file,"rb")
             }
         )
+
 
     def download_media(self, media_id):
         """
@@ -214,6 +298,22 @@ class Client(object):
             }
         )
 
+    def download_media_temp(self, media_id):
+        """
+        获取临时素材文件 。
+        详情请参考http://qydev.weixin.qq.com/wiki/index.php?title=管理素材文件
+
+        :param media_id: 媒体文件 ID
+
+        :return: requests 的 Response 实例
+        """
+        return requests.get(
+            "https://qyapi.weixin.qq.com/cgi-bin/media/get",
+            params={
+                "access_token": self.token,
+                "media_id": media_id
+            }
+        )
 
     def get_material_count(self):
         """
@@ -541,9 +641,9 @@ class Client(object):
                     "agentid": self.agentid,
                     "mpnews": {
                         "media_id": media_id
+                        }
                     }
-                }
-            )
+                )
 
         articles_data = []
         for article in articles:

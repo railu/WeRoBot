@@ -27,8 +27,13 @@ _DEFAULT_CONFIG = dict(
 
 
 class BaseRoBot(object):
-    message_types = ['subscribe', 'unsubscribe', 'click',  'view',  # event
-                     'text', 'image', 'link', 'location', 'location_select', 'voice']
+    message_types = ['subscribe', 'unsubscribe',
+                     'CLICK', 'VIEW', 'LOCATION',
+                     'scancode_push', 'scancode_waitmsg',
+                     'pic_sysphoto', 'pic_photo_or_album', 'pic_weixin',
+                     'location_select',
+                     'enter_agent', 'batch_job_result',   # event
+                     'text', 'image', 'voice', 'video', 'shortvideo', 'location', 'link']
 
     token = ConfigAttribute("TOKEN")
     session_storage = ConfigAttribute("SESSION_STORAGE")
@@ -72,85 +77,12 @@ class BaseRoBot(object):
         self.add_handler(f, type='text')
         return f
 
-    def image(self, f):
-        """
-        Decorator to add a handler function for ``image`` messages
-        """
-        self.add_handler(f, type='image')
-        return f
-
-    def location(self, f):
-        """
-        Decorator to add a handler function for ``location`` messages
-        """
-        self.add_handler(f, type='location')
-        return f
-
-    def location_select(self, f):
-        """
-        Decorator to add a handler function for ``location`` messages
-        """
-        self.add_handler(f, type='location_select')
-        return f
-
-    def link(self, f):
-        """
-        Decorator to add a handler function for ``link`` messages
-        """
-        self.add_handler(f, type='link')
-        return f
-
-    def voice(self, f):
-        """
-        Decorator to add a handler function for ``voice`` messages
-        """
-        self.add_handler(f, type='voice')
-        return f
-
-    def subscribe(self, f):
-        """
-        Decorator to add a handler function for ``subscribe event`` messages
-        """
-        self.add_handler(f, type='subscribe')
-        return f
-
-    def unsubscribe(self, f):
-        """
-        Decorator to add a handler function for ``unsubscribe event`` messages
-        """
-        self.add_handler(f, type='unsubscribe')
-        return f
-
-    def click(self, f):
-        """
-        Decorator to add a handler function for ``click`` messages
-        """
-        self.add_handler(f, type='click')
-        return f
-
-    def key_click(self, key):
-        """
-        Shortcut for ``click`` messages
-        @key_click('KEYNAME') for special key on click event
-        """
-        def wraps(f):
-            argc = len(inspect.getargspec(f).args)
-
-            @self.click
-            def onclick(message, session=None):
-                if message.key == key:
-                    return f(*[message, session][:argc])
-            return f
-
-        return wraps
-
     def filter(self, *args):
         """
         Shortcut for ``text`` messages
         ``@filter("xxx")``, ``@filter(re.compile("xxx"))``
         or ``@filter("xxx", "xxx2")`` to handle message with special content
         """
-
         content_is_list = False
 
         if len(args) > 1:
@@ -186,11 +118,83 @@ class BaseRoBot(object):
 
         return wraps
 
+    def image(self, f):
+        """
+        Decorator to add a handler function for ``image`` messages
+        """
+        self.add_handler(f, type='image')
+        return f
+
+    def voice(self, f):
+        """
+        Decorator to add a handler function for ``voice`` messages
+        """
+        self.add_handler(f, type='voice')
+        return f
+
+    def location(self, f):
+        """
+        Decorator to add a handler function for ``location`` messages
+        """
+        self.add_handler(f, type='location')
+        return f
+
+    def link(self, f):
+        """
+        Decorator to add a handler function for ``link`` messages
+        """
+        self.add_handler(f, type='link')
+        return f
+
+    def subscribe(self, f):
+        """
+        Decorator to add a handler function for ``subscribe event`` messages
+        """
+        self.add_handler(f, type='subscribe')
+        return f
+
+    def unsubscribe(self, f):
+        """
+        Decorator to add a handler function for ``unsubscribe event`` messages
+        """
+        self.add_handler(f, type='unsubscribe')
+        return f
+
+    def Location(self, f):
+        """
+        Decorator to add a handler function for ``location`` messages
+        """
+        self.add_handler(f, type='LOCATION')
+        return f
+
+    def click(self, f):
+        """
+        Decorator to add a handler function for ``click`` messages
+        """
+        self.add_handler(f, type='CLICK')
+        return f
+
+    def key_click(self, key):
+        """
+        Shortcut for ``click`` messages
+        @key_click('KEYNAME') for special key on click event
+        """
+        def wraps(f):
+            argc = len(inspect.getargspec(f).args)
+
+            @self.click
+            def onclick(message, session=None):
+                if message.key == key:
+                    return f(*[message, session][:argc])
+            return f
+
+        return wraps
+
     def view(self, f):
         """
         Decorator to add a handler function for ``view event`` messages
         """
-        self.add_handler(f, type='view')
+        self.add_handler(f, type='VIEW')
         return f
 
     def add_handler(self, func, type='all'):
