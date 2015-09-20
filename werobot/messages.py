@@ -70,9 +70,9 @@ class EventMessage(WeChatMessage):
     def __init__(self, message):
         message.pop("type")
         self.type = message.pop("Event")
-        if self.type == "CLICK":
+        if self.type == "click":
             self.key = message.pop('EventKey')
-        elif self.type == "VIEW":
+        elif self.type == "view":
             self.key = message.pop("EventKey")
         elif self.type == "LOCATION":
             self.latitude = float(message.pop("Latitude"))

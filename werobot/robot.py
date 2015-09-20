@@ -28,7 +28,7 @@ _DEFAULT_CONFIG = dict(
 
 class BaseRoBot(object):
     message_types = ['subscribe', 'unsubscribe',
-                     'CLICK', 'VIEW', 'LOCATION',
+                     'click', 'view', 'LOCATION',
                      'scancode_push', 'scancode_waitmsg',
                      'pic_sysphoto', 'pic_photo_or_album', 'pic_weixin',
                      'location_select',
@@ -171,7 +171,7 @@ class BaseRoBot(object):
         """
         Decorator to add a handler function for ``click`` messages
         """
-        self.add_handler(f, type='CLICK')
+        self.add_handler(f, type='click')
         return f
 
     def key_click(self, key):
@@ -194,7 +194,7 @@ class BaseRoBot(object):
         """
         Decorator to add a handler function for ``view event`` messages
         """
-        self.add_handler(f, type='VIEW')
+        self.add_handler(f, type='view')
         return f
 
     def location_select(self, f):
