@@ -76,6 +76,11 @@ class EventMessage(WeChatMessage):
             self.latitude = float(message.pop("Latitude"))
             self.longitude = float(message.pop("Longitude"))
             self.precision = float(message.pop("Precision"))
+        elif self.type == "location_select":
+            self.key = message.pop('EventKey')
+            self.latitude = float(message.pop("Location_X"))
+            self.longitude = float(message.pop("Location_Y"))
+            self.label = message.pop("Label")
         super(EventMessage, self).__init__(message)
 
 class UnknownMessage(WeChatMessage):

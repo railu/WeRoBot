@@ -23,7 +23,6 @@ class mpArticle(object):
         self.show_cover_pic = show_cover_pic
 
 class WeChatReply(object):
-
     def __init__(self, message=None, **kwargs):
         if "source" not in kwargs and isinstance(message, WeChatMessage):
             kwargs["source"] = message.target
@@ -45,7 +44,6 @@ class WeChatReply(object):
     def render(self):
         raise NotImplementedError()
 
-
 class TextReply(WeChatReply):
     TEMPLATE = to_text("""
     <xml>
@@ -60,8 +58,57 @@ class TextReply(WeChatReply):
     def render(self):
         return TextReply.TEMPLATE.format(**self._args)
 
+class ImageReply(WeChatReply):
+    TEMPLATE = to_text("""
+    <xml>
+    <ToUserName><![CDATA[{target}]]></ToUserName>
+    <FromUserName><![CDATA[{source}]]></FromUserName>
+    <CreateTime>{time}</CreateTime>
+    <MsgType><![CDATA[image]]></MsgType>
+    <Image>
+        <MediaId><![CDATA[{media_id}]]></MediaId>
+    </Image>
+    </xml>
+    """)
 
-class ArticlesReply(WeChatReply):
+    def render(self):
+        return ImageReply.TEMPLATE.format(**self._args)
+
+class VoiceReply(WeChatReply):
+    TEMPLATE = to_text("""
+    <xml>
+    <ToUserName><![CDATA[{target}]]></ToUserName>
+    <FromUserName><![CDATA[{source}]]></FromUserName>
+    <CreateTime>{time}</CreateTime>
+    <MsgType><![CDATA[voice]]></MsgType>
+    <Voice>
+        <MediaId><![CDATA[{media_id}]]></MediaId>
+    </Voice>
+    </xml>
+    """)
+
+    def render(self):
+        return VoiceReply.TEMPLATE.format(**self._args)
+
+class VideoReply(WeChatReply):
+    TEMPLATE = to_text("""
+    <xml>
+    <ToUserName><![CDATA[{target}]]></ToUserName>
+    <FromUserName><![CDATA[{source}]]></FromUserName>
+    <CreateTime>{time}</CreateTime>
+    <MsgType><![CDATA[video]]></MsgType>
+    <Video>
+        <MediaId><![CDATA[{media_id}]]></MediaId>
+        <Title><![CDATA[{title}]]></Title>
+        <Description><![CDATA[{description}]]></Description>
+    </Video>
+    </xml>
+    """)
+
+    def render(self):
+        return VideoReply.TEMPLATE.format(**self._args)
+
+class NewsReply(WeChatReply):
     TEMPLATE = to_text("""
     <xml>
     <ToUserName><![CDATA[{target}]]></ToUserName>
@@ -84,20 +131,20 @@ class ArticlesReply(WeChatReply):
     """)
 
     def __init__(self, message=None, **kwargs):
-        super(ArticlesReply, self).__init__(message, **kwargs)
+        super(NewsReply, self).__init__(message, **kwargs)
         self._articles = []
 
     def add_article(self, article):
-        if len(self._articles) >= 10:
-            raise AttributeError("Can't add more than 10 articles"
+         if len(self._articles) >= 10:
+             raise AttributeError("Can't add more than 10 articles"
                                  " in an ArticlesReply")
-        else:
-            self._articles.append(article)
+         else:
+             self._articles.append(article)
 
     def render(self):
         items = []
         for article in self._articles:
-            items.append(ArticlesReply.ITEM_TEMPLATE.format(
+            items.append(NewsReply.ITEM_TEMPLATE.format(
                 title=to_text(article.title),
                 description=to_text(article.description),
                 img=to_text(article.img),
@@ -107,28 +154,7 @@ class ArticlesReply(WeChatReply):
         self._args["count"] = len(items)
         if "content" not in self._args:
             self._args["content"] = ''
-        return ArticlesReply.TEMPLATE.format(**self._args)
-
-
-class MusicReply(WeChatReply):
-    TEMPLATE = to_text("""
-    <xml>
-    <ToUserName><![CDATA[{target}]]></ToUserName>
-    <FromUserName><![CDATA[{source}]]></FromUserName>
-    <CreateTime>{time}</CreateTime>
-    <MsgType><![CDATA[music]]></MsgType>
-    <Music>
-    <Title><![CDATA[{title}]]></Title>
-    <Description><![CDATA[{description}]]></Description>
-    <MusicUrl><![CDATA[{url}]]></MusicUrl>
-    <HQMusicUrl><![CDATA[{hq_url}]]></HQMusicUrl>
-    </Music>
-    </xml>
-    """)
-
-    def render(self):
-        return MusicReply.TEMPLATE.format(**self._args)
-
+        return NewsReply.TEMPLATE.format(**self._args)
 
 def create_reply(reply, message=None):
     if isinstance(reply, WeChatReply):
@@ -140,21 +166,8 @@ def create_reply(reply, message=None):
         if len(reply) > 10:
             raise AttributeError("Can't add more than 10 articles"
                                  " in an ArticlesReply")
-        r = ArticlesReply(message=message)
+        r = NewsReply(message=message)
         for article in reply:
             article = Article(*article)
             r.add_article(article)
         return r.render()
-    elif isinstance(reply, list) and 3 <= len(reply) <= 4:
-        if len(reply) == 3:
-            # 如果数组长度为3， 那么高质量音乐链接的网址和普通质量的网址相同。
-            reply.append(reply[-1])
-        title, description, url, hq_url = reply
-        reply = MusicReply(
-            message=message,
-            title=title,
-            description=description,
-            url=url,
-            hq_url=hq_url
-        )
-        return reply.render()
