@@ -197,6 +197,14 @@ class BaseRoBot(object):
         self.add_handler(f, type='VIEW')
         return f
 
+    def location_select(self, f):
+        """
+        Decorator to add a handler function for ``location_select`` messages
+        """
+        self.add_handler(f, type='location_select')
+        return f
+
+
     def add_handler(self, func, type='all'):
         """
         Add a handler function for messages of given type.
