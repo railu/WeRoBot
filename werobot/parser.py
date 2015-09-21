@@ -13,8 +13,14 @@ def parse_user_msg(xml):
     if not xml:
         return
 
+    root = ElementTree.fromstring(xml)
     wechat_message = dict((child.tag, to_text(child.text))
-                          for child in ElementTree.fromstring(xml))
+                          for child in root)
+    locationinfo = root.find('SendLocationInfo')
+    if locationinfo:
+        wechat_message.pop("SendLocationInfo")
+        wechat_message.update(dict((child.tag, to_text(child.text))
+                          for child in locationinfo))
     wechat_message["raw"] = xml
     wechat_message["type"] = wechat_message.pop("MsgType")
 
